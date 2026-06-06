@@ -1,0 +1,2 @@
+"""Scanner adapters for GateProof."""
+

@@ -1,0 +1,31 @@
+{
+  "scan_type": "SAST",
+  "source_tool": "mock",
+  "findings": [
+    {
+      "id": "MOCK-SAST-001",
+      "rule_id": "PY-HARD-CODED-SECRET",
+      "title": "Hard-coded secret in Python source",
+      "description": "A mock finding that simulates a high severity SAST issue.",
+      "severity": "HIGH",
+      "location": "app.py:10",
+      "cve": null,
+      "status": "OPEN",
+      "raw_reference": "mock://MOCK-SAST-001",
+      "blocking": false
+    },
+    {
+      "id": "MOCK-SAST-002",
+      "rule_id": "PY-DEBUG-MODE",
+      "title": "Debug mode enabled",
+      "description": "A mock finding that simulates a low severity SAST issue.",
+      "severity": "LOW",
+      "location": "app.py:20",
+      "cve": null,
+      "status": "OPEN",
+      "raw_reference": "mock://MOCK-SAST-002",
+      "blocking": false
+    }
+  ]
+}
+

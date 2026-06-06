@@ -1,0 +1,11 @@
+controls:
+  - id: GP-SG-001
+    title: Security gate decision is recorded
+    description: GateProof stores the gate decision as part of the evidence bundle.
+  - id: GP-SG-002
+    title: Policy snapshot is preserved
+    description: GateProof stores the policy used for the security gate decision.
+  - id: GP-SG-003
+    title: Normalized findings are preserved
+    description: GateProof stores normalized findings consumed by the policy engine.
+
