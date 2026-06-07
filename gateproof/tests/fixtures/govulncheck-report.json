@@ -1,0 +1,4 @@
+{"config":{"protocol_version":"v1"}}
+{"osv":{"id":"GO-2023-0001","summary":"demo vulnerable module"}}
+{"finding":{"osv":"GO-2023-0001","trace":[{"module":"example.com/demo","package":"example.com/demo/pkg","function":"Run"}]}}
+

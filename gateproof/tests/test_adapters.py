@@ -70,3 +70,16 @@ def test_loader_loads_multiple_pip_audit_reports(tmp_path: Path) -> None:
 
     assert len(reports) == 2
     assert all(report.source_tool == "pip-audit" for report in reports)
+
+
+def test_loader_loads_go_reports(tmp_path: Path) -> None:
+    for report_name in ("gosec-report.json", "govulncheck-report.json"):
+        (tmp_path / report_name).write_text(
+            (FIXTURES_DIR / report_name).read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+
+    reports = load_reports_from_dir(tmp_path)
+    source_tools = {report.source_tool for report in reports}
+
+    assert source_tools == {"gosec", "govulncheck"}

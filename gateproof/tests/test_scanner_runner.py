@@ -66,13 +66,76 @@ def test_parse_languages_rejects_unknown_language() -> None:
         parse_languages("bad")
 
 
-def test_run_scanners_rejects_unimplemented_go_profile(tmp_path: Path) -> None:
+def test_run_scanners_runs_go_and_common_scanners(monkeypatch, tmp_path: Path) -> None:
+    reports_dir = tmp_path / "reports"
+    calls: list[tuple[str, object]] = []
+
+    def fake_run_go_scanners(
+        source: Path,
+        reports_dir: Path,
+        packages: list[str] | None = None,
+    ) -> list[Path]:
+        calls.append(("go", source, packages))
+        report_path = reports_dir / "gosec-report.json"
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text('{"Issues":[]}', encoding="utf-8")
+        return [report_path]
+
+    def fake_run_gitleaks(
+        source: Path,
+        reports_dir: Path,
+        config: Path | None = None,
+    ) -> Path:
+        del config
+        calls.append(("gitleaks", source))
+        report_path = reports_dir / "gitleaks-report.json"
+        report_path.write_text("[]", encoding="utf-8")
+        return report_path
+
+    def fake_run_trivy_image(image: str, reports_dir: Path) -> Path:
+        calls.append(("trivy", image))
+        report_path = reports_dir / "trivy-report.json"
+        report_path.write_text('{"Results":[]}', encoding="utf-8")
+        return report_path
+
+    monkeypatch.setattr(
+        "gateproof.scanners.runner.run_go_scanners",
+        fake_run_go_scanners,
+    )
+    monkeypatch.setattr("gateproof.scanners.runner.run_gitleaks", fake_run_gitleaks)
+    monkeypatch.setattr(
+        "gateproof.scanners.runner.run_trivy_image",
+        fake_run_trivy_image,
+    )
+
+    report_paths = run_scanners(
+        source=tmp_path,
+        reports_dir=reports_dir,
+        languages=[ProjectLanguage.GO],
+        image="demo:latest",
+        go_source=tmp_path,
+        go_packages=["./..."],
+    )
+
+    assert calls == [
+        ("go", tmp_path, ["./..."]),
+        ("gitleaks", tmp_path),
+        ("trivy", "demo:latest"),
+    ]
+    assert {path.name for path in report_paths} == {
+        "gosec-report.json",
+        "gitleaks-report.json",
+        "trivy-report.json",
+    }
+
+
+def test_run_scanners_rejects_unimplemented_cpp_profile(tmp_path: Path) -> None:
     with pytest.raises(
         ScannerExecutionError,
-        match="Language 'go' is detected but scanner profile is not implemented yet.",
+        match="Language 'cpp' is detected but scanner profile is not implemented yet.",
     ):
         run_scanners(
             source=tmp_path,
             reports_dir=tmp_path / "reports",
-            languages=[ProjectLanguage.GO],
+            languages=[ProjectLanguage.CPP],
         )

@@ -89,5 +89,48 @@ def test_policy_fails_on_missing_required_tool() -> None:
     )
 
 
+def test_python_go_policy_required_tools_pass_when_all_tools_present() -> None:
+    policy = load_policy(Path("policies/python-go.yaml"))
+    reports = [
+        ScanReport(scan_type=ScanType.SAST, source_tool="bandit", findings=[]),
+        ScanReport(scan_type=ScanType.SCA, source_tool="pip-audit", findings=[]),
+        ScanReport(scan_type=ScanType.SAST, source_tool="gosec", findings=[]),
+        ScanReport(scan_type=ScanType.SCA, source_tool="govulncheck", findings=[]),
+        ScanReport(scan_type=ScanType.SECRETS, source_tool="gitleaks", findings=[]),
+        ScanReport(scan_type=ScanType.CONTAINER, source_tool="trivy", findings=[]),
+    ]
+
+    decision = evaluate_policy(policy, reports)
+
+    assert decision.status == GateStatus.PASS
+    assert decision.executed_tools == [
+        "bandit",
+        "pip-audit",
+        "gosec",
+        "govulncheck",
+        "gitleaks",
+        "trivy",
+    ]
+
+
+def test_python_go_policy_fails_when_govulncheck_is_missing() -> None:
+    policy = load_policy(Path("policies/python-go.yaml"))
+    reports = [
+        ScanReport(scan_type=ScanType.SAST, source_tool="bandit", findings=[]),
+        ScanReport(scan_type=ScanType.SCA, source_tool="pip-audit", findings=[]),
+        ScanReport(scan_type=ScanType.SAST, source_tool="gosec", findings=[]),
+        ScanReport(scan_type=ScanType.SECRETS, source_tool="gitleaks", findings=[]),
+        ScanReport(scan_type=ScanType.CONTAINER, source_tool="trivy", findings=[]),
+    ]
+
+    decision = evaluate_policy(policy, reports)
+
+    assert decision.status == GateStatus.FAIL
+    assert any(
+        violation.id == "missing_required_tool:govulncheck"
+        for violation in decision.violations
+    )
+
+
 def _empty_report(scan_type: ScanType) -> ScanReport:
     return ScanReport(scan_type=scan_type, source_tool="mock", findings=[])

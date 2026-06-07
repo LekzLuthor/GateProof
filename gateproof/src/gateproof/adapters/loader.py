@@ -3,6 +3,8 @@ from pathlib import Path
 
 from gateproof.adapters.bandit import load_bandit_report
 from gateproof.adapters.gitleaks import load_gitleaks_report
+from gateproof.adapters.gosec import load_gosec_report
+from gateproof.adapters.govulncheck import load_govulncheck_report
 from gateproof.adapters.mock import load_mock_report
 from gateproof.adapters.pip_audit import load_pip_audit_report
 from gateproof.adapters.trivy import load_trivy_report
@@ -33,6 +35,10 @@ def _select_loader(filename: str) -> ReportLoader | None:
 
     if "mock" in normalized:
         return load_mock_report
+    if "govulncheck" in normalized or "go-vuln" in normalized:
+        return load_govulncheck_report
+    if "gosec" in normalized:
+        return load_gosec_report
     if "bandit" in normalized or "sast" in normalized:
         return load_bandit_report
     if (

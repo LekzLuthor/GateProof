@@ -128,7 +128,7 @@ gateproof scan \
   --output .gateproof/evidence
 ```
 
-The Go and C/C++ profiles are detected and validated, but their scanners are not implemented yet. Selecting `go` or `cpp` currently returns a clear “profile is not implemented yet” error.
+The Go profile is supported through gosec and govulncheck. The C/C++ profile is detected and validated, but its scanners are not implemented yet. Selecting `cpp` currently returns a clear "profile is not implemented yet" error.
 
 Policies can require both scan categories and concrete tools:
 
@@ -188,7 +188,40 @@ Use the GateProof composite action as a single `uses` step:
     output: .gateproof/evidence
 ```
 
-The composite action installs GateProof, Bandit, pip-audit, Gitleaks, and Trivy, then runs `gateproof scan`. Upload the generated evidence bundle with a separate `actions/upload-artifact` step. For demonstration FAIL scenarios, use `continue-on-error: true` on the GateProof step when you still want later artifact upload steps to run.
+The composite action installs GateProof, Bandit, pip-audit, gosec, govulncheck, Gitleaks, and Trivy, then runs `gateproof scan`. Upload the generated evidence bundle with a separate `actions/upload-artifact` step. For demonstration FAIL scenarios, use `continue-on-error: true` on the GateProof step when you still want later artifact upload steps to run.
+
+## Go Support
+
+GateProof supports Go projects with:
+
+- Go SAST: `gosec`
+- Go SCA: `govulncheck`
+- Secrets: Gitleaks
+- Container image scanning: Trivy
+
+Run GateProof for a Go project:
+
+```bash
+gateproof scan \
+  --languages go \
+  --source . \
+  --policy policies/security-gate.yaml \
+  --reports .gateproof/input \
+  --output .gateproof/evidence \
+  --commit "$GITHUB_SHA"
+```
+
+Run a Python+Go monorepo through `gateproof.yaml`:
+
+```bash
+gateproof scan \
+  --config gateproof.yaml \
+  --policy policies/python-go.yaml \
+  --image my-service:${GITHUB_SHA} \
+  --commit "$GITHUB_SHA"
+```
+
+Use `required_tools` to verify that both Python and Go scanners ran. For example, `policies/python-go.yaml` requires `bandit`, `pip-audit`, `gosec`, `govulncheck`, `gitleaks`, and `trivy`.
 
 ## Example Policy
 

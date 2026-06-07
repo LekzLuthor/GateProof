@@ -1,0 +1,14 @@
+{
+  "Issues": [
+    {
+      "severity": "HIGH",
+      "confidence": "HIGH",
+      "rule_id": "G204",
+      "details": "Subprocess launched with variable",
+      "file": "main.go",
+      "line": "12",
+      "column": "10"
+    }
+  ]
+}
+

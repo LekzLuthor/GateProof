@@ -7,6 +7,7 @@ from gateproof.scanners.common import (
     ensure_tool_available,
     run_command,
 )
+from gateproof.scanners.go import run_go_scanners
 from gateproof.scanners.python import run_python_scanners
 
 
@@ -93,14 +94,12 @@ def run_scanners(
     go_source: Path | None = None,
     go_packages: list[str] | None = None,
 ) -> list[Path]:
-    del go_source, go_packages
-
     reports_dir.mkdir(parents=True, exist_ok=True)
     selected_languages = _resolve_languages(source, languages)
 
     report_paths: list[Path] = []
     for selected_language in selected_languages:
-        if selected_language in {ProjectLanguage.GO, ProjectLanguage.CPP}:
+        if selected_language == ProjectLanguage.CPP:
             raise ScannerExecutionError(
                 f"Language '{selected_language.value}' is detected but scanner "
                 "profile is not implemented yet."
@@ -111,6 +110,14 @@ def run_scanners(
                     python_source or source,
                     reports_dir,
                     requirements_files=python_requirements,
+                )
+            )
+        if selected_language == ProjectLanguage.GO:
+            report_paths.extend(
+                run_go_scanners(
+                    go_source or source,
+                    reports_dir,
+                    packages=go_packages,
                 )
             )
 

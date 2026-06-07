@@ -126,7 +126,7 @@ def test_scan_cli_languages_option_uses_runner(monkeypatch, tmp_path: Path) -> N
     assert calls[0]["languages"] == [ProjectLanguage.PYTHON]
 
 
-def test_scan_cli_go_language_returns_not_implemented(tmp_path: Path) -> None:
+def test_scan_cli_cpp_language_returns_not_implemented(tmp_path: Path) -> None:
     source = tmp_path / "source"
     source.mkdir()
 
@@ -139,12 +139,12 @@ def test_scan_cli_go_language_returns_not_implemented(tmp_path: Path) -> None:
             "--source",
             str(source),
             "--languages",
-            "go",
+            "cpp",
         ],
     )
 
     assert result.exit_code == 2
-    assert "Language 'go' is detected but scanner profile is not implemented yet." in (
+    assert "Language 'cpp' is detected but scanner profile is not implemented yet." in (
         result.output
     )
 
