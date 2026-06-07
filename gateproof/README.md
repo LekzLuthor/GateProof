@@ -72,6 +72,48 @@ Minimal GitHub Actions usage:
       --commit "${{ github.sha }}"
 ```
 
+## GitHub Action Usage
+
+GateProof can be used in GitHub Actions in two ways.
+
+### Variant A. CLI Scan Mode
+
+Install the package yourself, install the external scanners, and call `gateproof scan`:
+
+```yaml
+- name: Install GateProof
+  run: |
+    python -m pip install --upgrade pip
+    pip install "git+https://github.com/LekzLuthor/GateProof.git#subdirectory=gateproof"
+
+- name: Run GateProof scan
+  run: |
+    gateproof scan \
+      --policy policies/security-gate.yaml \
+      --source . \
+      --language python \
+      --image my-app:${{ github.sha }} \
+      --output .gateproof/evidence \
+      --commit "${{ github.sha }}"
+```
+
+### Variant B. Composite Action
+
+Use the GateProof composite action as a single `uses` step:
+
+```yaml
+- name: Run GateProof
+  uses: LekzLuthor/GateProof/.github/actions/gateproof@main
+  with:
+    policy: policies/security-gate.yaml
+    source: .
+    language: python
+    image: my-app:${{ github.sha }}
+    output: .gateproof/evidence
+```
+
+The composite action installs GateProof, Bandit, pip-audit, Gitleaks, and Trivy, then runs `gateproof scan`. Upload the generated evidence bundle with a separate `actions/upload-artifact` step. For demonstration FAIL scenarios, use `continue-on-error: true` on the GateProof step when you still want later artifact upload steps to run.
+
 ## Example Policy
 
 ```yaml

@@ -1,0 +1,64 @@
+name: Security Gate Action Demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Demo application to scan
+        required: true
+        default: vulnerable
+        type: choice
+        options:
+          - vulnerable
+          - clean
+      policy:
+        description: GateProof policy to apply
+        required: true
+        default: default
+        type: choice
+        options:
+          - default
+          - demo-pass
+
+jobs:
+  security-gate-action:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select demo application
+        shell: bash
+        run: |
+          if [[ "${{ github.event.inputs.target }}" == "vulnerable" ]]; then
+            echo "APP_DIR=examples/vulnerable-python-app" >> "$GITHUB_ENV"
+          else
+            echo "APP_DIR=examples/clean-python-app" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build demo image
+        working-directory: gateproof
+        shell: bash
+        run: docker build -t gateproof-action-demo:${{ github.sha }} "$APP_DIR"
+
+      - name: Run GateProof
+        uses: ./.github/actions/gateproof
+        continue-on-error: true
+        with:
+          policy: gateproof/policies/${{ github.event.inputs.policy }}.yaml
+          source: gateproof/${{ env.APP_DIR }}
+          language: python
+          image: gateproof-action-demo:${{ github.sha }}
+          output: gateproof/.gateproof/evidence-action
+          gitleaks_config: gateproof/.gitleaks.toml
+
+      - name: Show gate decision
+        shell: bash
+        run: cat gateproof/.gateproof/evidence-action/gate-decision.json
+
+      - name: Upload GateProof evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: gateproof-action-evidence-${{ github.event.inputs.target }}-${{ github.event.inputs.policy }}
+          path: gateproof/.gateproof/evidence-action

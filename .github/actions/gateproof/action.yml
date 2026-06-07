@@ -1,0 +1,129 @@
+name: "GateProof Security Gate"
+description: "Run security scanners, evaluate Policy-as-Code, and generate an evidence bundle"
+
+inputs:
+  policy:
+    description: "Path to GateProof policy YAML"
+    required: true
+  source:
+    description: "Project source directory to scan"
+    required: false
+    default: "."
+  language:
+    description: "Project language: python, go, cpp, or auto"
+    required: false
+    default: "auto"
+  image:
+    description: "Container image to scan with Trivy"
+    required: false
+    default: ""
+  reports:
+    description: "Directory where scanner reports are written"
+    required: false
+    default: ".gateproof/input"
+  output:
+    description: "Directory where evidence artifacts are written"
+    required: false
+    default: ".gateproof/evidence"
+  gitleaks_config:
+    description: "Optional path to Gitleaks config"
+    required: false
+    default: ""
+  no_container:
+    description: "Skip Trivy container scanning even when image is set"
+    required: false
+    default: "false"
+  commit:
+    description: "Commit SHA associated with the gate decision"
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install GateProof and Python scanners
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install "git+https://github.com/LekzLuthor/GateProof.git#subdirectory=gateproof"
+        pip install bandit pip-audit
+
+    - name: Install Gitleaks
+      shell: bash
+      run: |
+        set -euo pipefail
+        GITLEAKS_VERSION="$(
+          curl -sSfL https://api.github.com/repos/gitleaks/gitleaks/releases/latest \
+            | python -c "import json, sys; print(json.load(sys.stdin)['tag_name'])"
+        )"
+        GITLEAKS_NUMBER="${GITLEAKS_VERSION#v}"
+        curl -sSfL \
+          "https://github.com/gitleaks/gitleaks/releases/download/${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_NUMBER}_linux_x64.tar.gz" \
+          -o gitleaks.tar.gz
+        tar -xzf gitleaks.tar.gz gitleaks
+        sudo install gitleaks /usr/local/bin/gitleaks
+        gitleaks version
+
+    - name: Install Trivy
+      shell: bash
+      run: |
+        set -euo pipefail
+        sudo apt-get update
+        sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
+          | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+        echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" \
+          | sudo tee /etc/apt/sources.list.d/trivy.list
+        sudo apt-get update
+        sudo apt-get install -y trivy
+        trivy --version
+
+    - name: Run GateProof scan
+      shell: bash
+      env:
+        GATEPROOF_POLICY: ${{ inputs.policy }}
+        GATEPROOF_SOURCE: ${{ inputs.source }}
+        GATEPROOF_LANGUAGE: ${{ inputs.language }}
+        GATEPROOF_IMAGE: ${{ inputs.image }}
+        GATEPROOF_REPORTS: ${{ inputs.reports }}
+        GATEPROOF_OUTPUT: ${{ inputs.output }}
+        GATEPROOF_GITLEAKS_CONFIG: ${{ inputs.gitleaks_config }}
+        GATEPROOF_NO_CONTAINER: ${{ inputs.no_container }}
+        GATEPROOF_COMMIT: ${{ inputs.commit }}
+        GITHUB_COMMIT: ${{ github.sha }}
+      run: |
+        set -euo pipefail
+
+        COMMIT="$GATEPROOF_COMMIT"
+        if [[ -z "$COMMIT" ]]; then
+          COMMIT="$GITHUB_COMMIT"
+        fi
+
+        ARGS=(
+          --policy "$GATEPROOF_POLICY"
+          --source "$GATEPROOF_SOURCE"
+          --language "$GATEPROOF_LANGUAGE"
+          --reports "$GATEPROOF_REPORTS"
+          --output "$GATEPROOF_OUTPUT"
+          --commit "$COMMIT"
+        )
+
+        if [[ -n "$GATEPROOF_IMAGE" ]]; then
+          ARGS+=(--image "$GATEPROOF_IMAGE")
+        fi
+
+        if [[ -n "$GATEPROOF_GITLEAKS_CONFIG" ]]; then
+          ARGS+=(--gitleaks-config "$GATEPROOF_GITLEAKS_CONFIG")
+        fi
+
+        if [[ "$GATEPROOF_NO_CONTAINER" == "true" ]]; then
+          ARGS+=(--no-container)
+        fi
+
+        gateproof scan "${ARGS[@]}"
+
