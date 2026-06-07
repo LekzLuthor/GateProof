@@ -30,6 +30,48 @@ gateproof evaluate \
 
 If the directory contains high or critical findings, the security gate is expected to finish with `FAIL`.
 
+## One-command Scan Mode
+
+GateProof has two operating modes:
+
+- `gateproof evaluate` accepts already prepared JSON security reports.
+- `gateproof scan` runs scanners first, writes reports to `.gateproof/input`, and then performs the same evaluation and evidence generation flow.
+
+Example for a Python/FastAPI project:
+
+```bash
+pip install "git+https://github.com/LekzLuthor/GateProof.git#subdirectory=gateproof"
+
+gateproof scan \
+  --policy policies/security-gate.yaml \
+  --source . \
+  --language python \
+  --image my-fastapi-app:${GITHUB_SHA} \
+  --output .gateproof/evidence \
+  --commit "${GITHUB_SHA}"
+```
+
+Minimal GitHub Actions usage:
+
+```yaml
+- name: Install GateProof
+  run: |
+    python -m pip install --upgrade pip
+    pip install "git+https://github.com/LekzLuthor/GateProof.git#subdirectory=gateproof"
+    pip install bandit pip-audit
+    # install gitleaks and trivy
+
+- name: Run GateProof scan
+  run: |
+    gateproof scan \
+      --policy policies/security-gate.yaml \
+      --source . \
+      --language python \
+      --image my-app:${{ github.sha }} \
+      --output .gateproof/evidence \
+      --commit "${{ github.sha }}"
+```
+
 ## Example Policy
 
 ```yaml
