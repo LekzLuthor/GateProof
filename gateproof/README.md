@@ -75,6 +75,55 @@ GateProof writes the following artifacts to the output directory:
 - `evidence-manifest.json`: manifest describing the generated bundle.
 - `compliance-report.html`: HTML report with the decision, violations, and artifact list.
 
+## Real Security Gate Demo
+
+The repository includes two demonstration applications:
+
+- `examples/vulnerable-python-app`: intentionally contains demo security issues.
+- `examples/clean-python-app`: minimal application without obvious source-level issues.
+
+Install GateProof and Python scanners:
+
+```bash
+cd gateproof
+pip install -e .[dev]
+pip install bandit pip-audit
+chmod +x scripts/run_security_tools.sh
+```
+
+The real scanner script also requires `gitleaks`, `trivy`, and Docker to be available on `PATH`.
+
+Run scanners and GateProof for the vulnerable app:
+
+```bash
+./scripts/run_security_tools.sh examples/vulnerable-python-app
+
+gateproof evaluate \
+  --policy policies/default.yaml \
+  --reports .gateproof/input \
+  --output .gateproof/evidence \
+  --commit demo-vulnerable
+```
+
+This scenario is expected to return `FAIL`.
+
+Run scanners and GateProof for the clean app:
+
+```bash
+rm -rf .gateproof
+./scripts/run_security_tools.sh examples/clean-python-app
+
+gateproof evaluate \
+  --policy policies/demo-pass.yaml \
+  --reports .gateproof/input \
+  --output .gateproof/evidence \
+  --commit demo-clean
+```
+
+This scenario is expected to return `PASS` when the external scanner databases do not report high or critical issues for the current base image and dependencies. Trivy results can change over time as vulnerability databases are updated, so a clean-app container finding may require refreshing the base image for a stable PASS demo.
+
+To run the real pipeline in GitHub Actions, open the `Security Gate Demo` workflow, choose `target` (`vulnerable` or `clean`), choose `policy` (`default` or `demo-pass`), and start the workflow manually. The workflow runs real scanners, evaluates GateProof, prints `gate-decision.json`, and uploads the evidence bundle as an artifact.
+
 ## Tests
 
 ```bash

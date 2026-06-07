@@ -1,0 +1,31 @@
+project:
+  name: clean-python-app
+  profile: demo-pass
+
+required_scans:
+  - SAST
+  - SCA
+  - SECRETS
+  - CONTAINER
+
+requirements:
+  sbom_required: false
+  evidence_bundle_required: true
+
+thresholds:
+  SAST:
+    critical: 0
+    high: 0
+  SCA:
+    critical: 0
+    high: 0
+  SECRETS:
+    high: 0
+  CONTAINER:
+    critical: 0
+    high: 0
+
+decision:
+  fail_on_missing_required_scan: true
+  fail_on_policy_violation: true
+

@@ -1,0 +1,101 @@
+name: Security Gate Demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Demo application to scan
+        required: true
+        default: vulnerable
+        type: choice
+        options:
+          - vulnerable
+          - clean
+      policy:
+        description: GateProof policy to apply
+        required: true
+        default: default
+        type: choice
+        options:
+          - default
+          - demo-pass
+
+jobs:
+  security-gate:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: gateproof
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install GateProof and Python scanners
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+          pip install bandit pip-audit
+
+      - name: Install Gitleaks
+        run: |
+          GITLEAKS_VERSION="$(
+            curl -sSfL https://api.github.com/repos/gitleaks/gitleaks/releases/latest \
+              | python -c "import json, sys; print(json.load(sys.stdin)['tag_name'].lstrip('v'))"
+          )"
+          curl -sSfL \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            -o gitleaks.tar.gz
+          tar -xzf gitleaks.tar.gz gitleaks
+          sudo install gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      - name: Install Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
+            | gpg --dearmor \
+            | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" \
+            | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
+          trivy --version
+
+      - name: Select demo application
+        run: |
+          if [[ "${{ github.event.inputs.target }}" == "vulnerable" ]]; then
+            echo "APP_DIR=examples/vulnerable-python-app" >> "$GITHUB_ENV"
+          else
+            echo "APP_DIR=examples/clean-python-app" >> "$GITHUB_ENV"
+          fi
+
+      - name: Run security tools
+        run: |
+          chmod +x scripts/run_security_tools.sh
+          ./scripts/run_security_tools.sh "$APP_DIR"
+
+      - name: Run GateProof
+        continue-on-error: true
+        run: |
+          gateproof evaluate \
+            --policy "policies/${{ github.event.inputs.policy }}.yaml" \
+            --reports .gateproof/input \
+            --output .gateproof/evidence \
+            --commit "${{ github.sha }}"
+
+      - name: Show gate decision
+        run: cat .gateproof/evidence/gate-decision.json
+
+      - name: Upload GateProof evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: gateproof-evidence-${{ github.event.inputs.target }}-${{ github.event.inputs.policy }}
+          path: gateproof/.gateproof/evidence

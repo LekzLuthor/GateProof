@@ -1,4 +1,6 @@
 # Vulnerable Python App
 
-Placeholder example application for future scanner adapter experiments.
+This demo application intentionally contains controlled security issues for GateProof demonstrations.
+
+The hardcoded key in `app.py` is public test data, not a real secret.
 
