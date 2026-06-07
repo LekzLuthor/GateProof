@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>GateProof Compliance Report</title>
+    <style>
+      :root {
+        color: #1f2937;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        background: #f8fafc;
+      }
+
+      body {
+        margin: 0;
+        padding: 32px;
+      }
+
+      main {
+        max-width: 1040px;
+        margin: 0 auto;
+      }
+
+      h1,
+      h2 {
+        color: #111827;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #ffffff;
+      }
+
+      th,
+      td {
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: #e5e7eb;
+      }
+
+      .summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+      }
+
+      .metric {
+        padding: 12px;
+        background: #ffffff;
+        border: 1px solid #d1d5db;
+      }
+
+      .status-pass {
+        color: #047857;
+        font-weight: 700;
+      }
+
+      .status-fail {
+        color: #b91c1c;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>GateProof Compliance Report</h1>
+
+      <section class="summary">
+        <div class="metric">
+          <strong>Project</strong>
+          <div>{{ decision.project_name }}</div>
+        </div>
+        <div class="metric">
+          <strong>Commit</strong>
+          <div>{{ decision.commit_sha or "not provided" }}</div>
+        </div>
+        <div class="metric">
+          <strong>Gate Status</strong>
+          <div class="status-{{ decision.status.value | lower }}">
+            {{ decision.status.value }}
+          </div>
+        </div>
+        <div class="metric">
+          <strong>Findings Total</strong>
+          <div>{{ decision.findings_total }}</div>
+        </div>
+      </section>
+
+      <h2>Explanation</h2>
+      <p>{{ decision.explanation }}</p>
+
+      <h2>Findings By Severity</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Severity</th>
+            <th>Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for severity, count in decision.findings_by_severity.items() %}
+            <tr>
+              <td>{{ severity }}</td>
+              <td>{{ count }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <h2>Policy Violations</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Scan Type</th>
+            <th>Severity</th>
+            <th>Actual</th>
+            <th>Allowed</th>
+            <th>Blocking</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if decision.violations %}
+            {% for violation in decision.violations %}
+              <tr>
+                <td>{{ violation.id }}</td>
+                <td>
+                  {{ violation.scan_type.value if violation.scan_type else "" }}
+                </td>
+                <td>
+                  {{ violation.severity.value if violation.severity else "" }}
+                </td>
+                <td>{{ violation.actual_count if violation.actual_count is not none else "" }}</td>
+                <td>{{ violation.allowed_count if violation.allowed_count is not none else "" }}</td>
+                <td>{{ violation.blocking }}</td>
+                <td>{{ violation.message }}</td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="7">No policy violations.</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+
+      <h2>Artifacts</h2>
+      <ul>
+        {% for artifact in manifest.artifacts %}
+          <li>{{ artifact }}</li>
+        {% endfor %}
+      </ul>
+    </main>
+  </body>
+</html>

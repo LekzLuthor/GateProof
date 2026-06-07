@@ -1,3 +1,4 @@
+import json
 import shutil
 from pathlib import Path
 
@@ -83,3 +84,7 @@ def test_scan_cli_uses_runner_and_creates_failing_evidence(
     assert (output_dir / "evidence-manifest.json").exists()
     assert (output_dir / "compliance-report.html").exists()
 
+    manifest = json.loads(
+        (output_dir / "evidence-manifest.json").read_text(encoding="utf-8")
+    )
+    assert "compliance-report.html" in manifest["artifacts"]

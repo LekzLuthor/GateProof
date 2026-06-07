@@ -70,18 +70,7 @@ runs:
         gitleaks version
 
     - name: Install Trivy
-      shell: bash
-      run: |
-        set -euo pipefail
-        sudo apt-get update
-        sudo apt-get install -y wget apt-transport-https gnupg lsb-release
-        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
-          | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
-        echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" \
-          | sudo tee /etc/apt/sources.list.d/trivy.list
-        sudo apt-get update
-        sudo apt-get install -y trivy
-        trivy --version
+      uses: aquasecurity/setup-trivy@v0.3.1
 
     - name: Run GateProof scan
       shell: bash
@@ -126,4 +115,3 @@ runs:
         fi
 
         gateproof scan "${ARGS[@]}"
-

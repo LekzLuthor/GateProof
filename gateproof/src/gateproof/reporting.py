@@ -38,6 +38,10 @@ def _template_environment() -> Environment:
 
 
 def _template_dir() -> Path:
+    package_template_dir = Path(__file__).resolve().parent / "templates"
+    if (package_template_dir / "compliance_report.html.j2").exists():
+        return package_template_dir
+
     cwd_template_dir = Path.cwd() / "templates"
     if (cwd_template_dir / "compliance_report.html.j2").exists():
         return cwd_template_dir
