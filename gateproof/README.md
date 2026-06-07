@@ -93,6 +93,12 @@ chmod +x scripts/run_security_tools.sh
 
 The real scanner script also requires `gitleaks`, `trivy`, and Docker to be available on `PATH`.
 
+`policies/default.yaml` is the strict release-control policy for the vulnerable demo. It blocks high and critical findings across the required scan types.
+
+`policies/demo-pass.yaml` is a demonstration baseline-tolerant policy for a reproducible clean-app PASS scenario. It still blocks high and critical SAST and SCA findings, and blocks high severity secrets, but it allows container CVEs from the current base image within the demo baseline. For production, use a strict policy and/or an explicit waiver or exception mechanism with justification and an expiration date.
+
+`.gitleaks.toml` contains a custom rule only for the intentionally vulnerable GateProof demo secret. It exists to make the experiment reproducible and should not be treated as a full production secret-detection policy.
+
 Run scanners and GateProof for the vulnerable app:
 
 ```bash
@@ -120,7 +126,7 @@ gateproof evaluate \
   --commit demo-clean
 ```
 
-This scenario is expected to return `PASS` when the external scanner databases do not report high or critical issues for the current base image and dependencies. Trivy results can change over time as vulnerability databases are updated, so a clean-app container finding may require refreshing the base image for a stable PASS demo.
+This scenario is expected to return `PASS`. Container findings can still be present, but the `demo-pass` policy tolerates them as part of the demo baseline. Trivy results can change over time as vulnerability databases are updated, so production use should prefer strict thresholds plus explicit exceptions.
 
 To run the real pipeline in GitHub Actions, open the `Security Gate Demo` workflow, choose `target` (`vulnerable` or `clean`), choose `policy` (`default` or `demo-pass`), and start the workflow manually. The workflow runs real scanners, evaluates GateProof, prints `gate-decision.json`, and uploads the evidence bundle as an artifact.
 

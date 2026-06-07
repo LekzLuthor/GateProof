@@ -3,6 +3,7 @@ set -euo pipefail
 
 APP_DIR="${1:-}"
 INPUT_DIR=".gateproof/input"
+GITLEAKS_CONFIG=".gitleaks.toml"
 
 if [[ -z "$APP_DIR" ]]; then
   echo "Usage: $0 <app-dir>" >&2
@@ -34,12 +35,22 @@ test -f "$INPUT_DIR/bandit-report.json" || echo '{"results":[]}' > "$INPUT_DIR/b
 pip-audit -r "$APP_DIR/requirements.txt" -f json -o "$INPUT_DIR/pip-audit-report.json" || true
 test -f "$INPUT_DIR/pip-audit-report.json" || echo '{"dependencies":[]}' > "$INPUT_DIR/pip-audit-report.json"
 
-gitleaks detect \
-  --source "$APP_DIR" \
-  --report-format json \
-  --report-path "$INPUT_DIR/gitleaks-report.json" \
-  --no-git \
-  || true
+if [[ -f "$GITLEAKS_CONFIG" ]]; then
+  gitleaks detect \
+    --source "$APP_DIR" \
+    --config "$GITLEAKS_CONFIG" \
+    --report-format json \
+    --report-path "$INPUT_DIR/gitleaks-report.json" \
+    --no-git \
+    || true
+else
+  gitleaks detect \
+    --source "$APP_DIR" \
+    --report-format json \
+    --report-path "$INPUT_DIR/gitleaks-report.json" \
+    --no-git \
+    || true
+fi
 test -f "$INPUT_DIR/gitleaks-report.json" || echo "[]" > "$INPUT_DIR/gitleaks-report.json"
 
 IMAGE_NAME="gateproof-demo:local"

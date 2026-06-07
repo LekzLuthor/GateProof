@@ -5,6 +5,9 @@ import subprocess
 # Intentionally vulnerable demo data. This is a public test value, not a real key.
 AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE"
 
+# Intentionally vulnerable demo secret for GateProof/Gitleaks tests.
+DEMO_SECRET = "GATEPROOF_DEMO_SECRET_1234567890"
+
 
 def run_healthcheck(host: str) -> str:
     command = f"ping -c 1 {host}"
@@ -18,4 +21,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
