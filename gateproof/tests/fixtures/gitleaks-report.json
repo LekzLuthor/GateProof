@@ -1,0 +1,11 @@
+[
+  {
+    "RuleID": "generic-api-key",
+    "Description": "Generic API key detected in source code.",
+    "File": "settings.py",
+    "StartLine": 7,
+    "Secret": "SUPER_SECRET_TOKEN",
+    "Commit": "abc123"
+  }
+]
+

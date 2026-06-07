@@ -13,7 +13,7 @@ from gateproof.models import EvidenceManifest, GateDecision, ScanReport
 def write_json(path: Path, data: BaseModel | dict[str, Any] | list[Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        json.dumps(_to_jsonable(data), ensure_ascii=True, indent=2),
+        json.dumps(_to_jsonable(data), ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
 

@@ -1,0 +1,60 @@
+{
+  "project_name": "vulnerable-python-app",
+  "commit_sha": "demo",
+  "status": "FAIL",
+  "policy_profile": "secure-release",
+  "executed_scans": [
+    "SAST",
+    "SECRETS",
+    "SCA",
+    "CONTAINER"
+  ],
+  "findings_total": 6,
+  "findings_by_severity": {
+    "CRITICAL": 1,
+    "HIGH": 4,
+    "MEDIUM": 0,
+    "LOW": 1,
+    "INFO": 0,
+    "UNKNOWN": 0
+  },
+  "violations": [
+    {
+      "id": "threshold_exceeded:SAST:HIGH",
+      "message": "SAST has 2 HIGH findings, allowed 0.",
+      "scan_type": "SAST",
+      "severity": "HIGH",
+      "actual_count": 2,
+      "allowed_count": 0,
+      "blocking": true
+    },
+    {
+      "id": "threshold_exceeded:SCA:HIGH",
+      "message": "SCA has 1 HIGH findings, allowed 0.",
+      "scan_type": "SCA",
+      "severity": "HIGH",
+      "actual_count": 1,
+      "allowed_count": 0,
+      "blocking": true
+    },
+    {
+      "id": "threshold_exceeded:SECRETS:HIGH",
+      "message": "SECRETS has 1 HIGH findings, allowed 0.",
+      "scan_type": "SECRETS",
+      "severity": "HIGH",
+      "actual_count": 1,
+      "allowed_count": 0,
+      "blocking": true
+    },
+    {
+      "id": "threshold_exceeded:CONTAINER:CRITICAL",
+      "message": "CONTAINER has 1 CRITICAL findings, allowed 0.",
+      "scan_type": "CONTAINER",
+      "severity": "CRITICAL",
+      "actual_count": 1,
+      "allowed_count": 0,
+      "blocking": true
+    }
+  ],
+  "explanation": "Security gate failed: 4 blocking policy violation(s) detected."
+}

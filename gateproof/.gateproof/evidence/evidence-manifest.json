@@ -1,0 +1,16 @@
+{
+  "project_name": "vulnerable-python-app",
+  "commit_sha": "demo",
+  "generated_at": "2026-06-06T23:54:45.275603Z",
+  "gate_status": "FAIL",
+  "artifacts": [
+    "gate-decision.json",
+    "findings-normalized.json",
+    "policy-snapshot.yaml",
+    "evidence-manifest.json",
+    "compliance-report.html"
+  ],
+  "policy_snapshot": "policy-snapshot.yaml",
+  "normalized_findings": "findings-normalized.json",
+  "decision_file": "gate-decision.json"
+}

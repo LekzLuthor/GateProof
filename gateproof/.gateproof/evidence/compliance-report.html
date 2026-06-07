@@ -75,26 +75,26 @@
       <section class="summary">
         <div class="metric">
           <strong>Project</strong>
-          <div>{{ decision.project_name }}</div>
+          <div>vulnerable-python-app</div>
         </div>
         <div class="metric">
           <strong>Commit</strong>
-          <div>{{ decision.commit_sha or "not provided" }}</div>
+          <div>demo</div>
         </div>
         <div class="metric">
           <strong>Gate Status</strong>
-          <div class="status-{{ decision.status.value | lower }}">
-            {{ decision.status.value }}
+          <div class="status-fail">
+            FAIL
           </div>
         </div>
         <div class="metric">
           <strong>Findings Total</strong>
-          <div>{{ decision.findings_total }}</div>
+          <div>6</div>
         </div>
       </section>
 
       <h2>Explanation</h2>
-      <p>{{ decision.explanation }}</p>
+      <p>Security gate failed: 4 blocking policy violation(s) detected.</p>
 
       <h2>Findings By Severity</h2>
       <table>
@@ -105,12 +105,37 @@
           </tr>
         </thead>
         <tbody>
-          {% for severity, count in decision.findings_by_severity.items() %}
+          
             <tr>
-              <td>{{ severity }}</td>
-              <td>{{ count }}</td>
+              <td>CRITICAL</td>
+              <td>1</td>
             </tr>
-          {% endfor %}
+          
+            <tr>
+              <td>HIGH</td>
+              <td>4</td>
+            </tr>
+          
+            <tr>
+              <td>MEDIUM</td>
+              <td>0</td>
+            </tr>
+          
+            <tr>
+              <td>LOW</td>
+              <td>1</td>
+            </tr>
+          
+            <tr>
+              <td>INFO</td>
+              <td>0</td>
+            </tr>
+          
+            <tr>
+              <td>UNKNOWN</td>
+              <td>0</td>
+            </tr>
+          
         </tbody>
       </table>
 
@@ -128,35 +153,81 @@
           </tr>
         </thead>
         <tbody>
-          {% if decision.violations %}
-            {% for violation in decision.violations %}
+          
+            
               <tr>
-                <td>{{ violation.id }}</td>
+                <td>threshold_exceeded:SAST:HIGH</td>
                 <td>
-                  {{ violation.scan_type.value if violation.scan_type else "" }}
+                  SAST
                 </td>
                 <td>
-                  {{ violation.severity.value if violation.severity else "" }}
+                  HIGH
                 </td>
-                <td>{{ violation.actual_count if violation.actual_count is not none else "" }}</td>
-                <td>{{ violation.allowed_count if violation.allowed_count is not none else "" }}</td>
-                <td>{{ violation.blocking }}</td>
-                <td>{{ violation.message }}</td>
+                <td>2</td>
+                <td>0</td>
+                <td>True</td>
+                <td>SAST has 2 HIGH findings, allowed 0.</td>
               </tr>
-            {% endfor %}
-          {% else %}
-            <tr>
-              <td colspan="7">No policy violations.</td>
-            </tr>
-          {% endif %}
+            
+              <tr>
+                <td>threshold_exceeded:SCA:HIGH</td>
+                <td>
+                  SCA
+                </td>
+                <td>
+                  HIGH
+                </td>
+                <td>1</td>
+                <td>0</td>
+                <td>True</td>
+                <td>SCA has 1 HIGH findings, allowed 0.</td>
+              </tr>
+            
+              <tr>
+                <td>threshold_exceeded:SECRETS:HIGH</td>
+                <td>
+                  SECRETS
+                </td>
+                <td>
+                  HIGH
+                </td>
+                <td>1</td>
+                <td>0</td>
+                <td>True</td>
+                <td>SECRETS has 1 HIGH findings, allowed 0.</td>
+              </tr>
+            
+              <tr>
+                <td>threshold_exceeded:CONTAINER:CRITICAL</td>
+                <td>
+                  CONTAINER
+                </td>
+                <td>
+                  CRITICAL
+                </td>
+                <td>1</td>
+                <td>0</td>
+                <td>True</td>
+                <td>CONTAINER has 1 CRITICAL findings, allowed 0.</td>
+              </tr>
+            
+          
         </tbody>
       </table>
 
       <h2>Artifacts</h2>
       <ul>
-        {% for artifact in manifest.artifacts %}
-          <li>{{ artifact }}</li>
-        {% endfor %}
+        
+          <li>gate-decision.json</li>
+        
+          <li>findings-normalized.json</li>
+        
+          <li>policy-snapshot.yaml</li>
+        
+          <li>evidence-manifest.json</li>
+        
+          <li>compliance-report.html</li>
+        
       </ul>
     </main>
   </body>

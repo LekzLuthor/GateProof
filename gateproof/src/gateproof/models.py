@@ -1,9 +1,9 @@
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel
 
 
-class Severity(str, Enum):
+class Severity(StrEnum):
     CRITICAL = "CRITICAL"
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
@@ -12,7 +12,7 @@ class Severity(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
-class ScanType(str, Enum):
+class ScanType(StrEnum):
     SAST = "SAST"
     SCA = "SCA"
     SECRETS = "SECRETS"
@@ -20,7 +20,7 @@ class ScanType(str, Enum):
     FUZZING = "FUZZING"
 
 
-class GateStatus(str, Enum):
+class GateStatus(StrEnum):
     PASS = "PASS"
     FAIL = "FAIL"
 
@@ -98,4 +98,3 @@ class EvidenceManifest(BaseModel):
     policy_snapshot: str | None = None
     normalized_findings: str | None = None
     decision_file: str | None = None
-

@@ -2,9 +2,9 @@ import json
 from pathlib import Path
 
 from gateproof.evidence import build_evidence_bundle
-from gateproof.models import GateStatus, ScanReport, ScanType
+from gateproof.models import GateStatus, ScanReport
 from gateproof.policy_engine import evaluate_policy, load_policy
-
+from gateproof.reporting import generate_html_report
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -32,3 +32,23 @@ def test_build_evidence_bundle_creates_expected_files(tmp_path: Path) -> None:
     assert decision_payload["status"] == "PASS"
     assert manifest_payload["decision_file"] == "gate-decision.json"
     assert manifest_payload["normalized_findings"] == "findings-normalized.json"
+
+
+def test_generate_html_report_creates_report_and_updates_manifest(
+    tmp_path: Path,
+) -> None:
+    policy_path = FIXTURES_DIR / "default_policy.yaml"
+    policy = load_policy(policy_path)
+    reports = [
+        ScanReport(scan_type=scan_type, source_tool="mock", findings=[])
+        for scan_type in policy.required_scans
+    ]
+    decision = evaluate_policy(policy, reports, commit_sha="abc123")
+    manifest = build_evidence_bundle(tmp_path, policy_path, reports, decision)
+
+    report_path = generate_html_report(tmp_path, decision, manifest)
+
+    assert report_path.name == "compliance-report.html"
+    assert report_path.exists()
+    assert "compliance-report.html" in manifest.artifacts
+    assert "vulnerable-python-app" in report_path.read_text(encoding="utf-8")

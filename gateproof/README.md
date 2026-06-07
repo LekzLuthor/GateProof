@@ -4,9 +4,7 @@ GateProof is a research prototype for a CI/CD security gate. It ingests normaliz
 
 ## Purpose
 
-The prototype is intended for a bachelor thesis experiment. At this stage it provides the project skeleton, data models, a basic CLI, a policy engine, evidence bundle generation, and a mock adapter for tests and demos.
-
-Real adapters for Bandit, pip-audit, Gitleaks, and Trivy are intentionally not implemented yet.
+The prototype is intended for a bachelor thesis experiment. At this stage it provides the project skeleton, data models, a CLI, a policy engine, evidence bundle generation, a mock adapter, and report adapters for Bandit, pip-audit, Gitleaks, and Trivy JSON outputs.
 
 ## Example Run
 
@@ -19,6 +17,18 @@ gateproof evaluate \
 ```
 
 The bundled mock report violates the default policy, so this example is expected to exit with code `1`.
+
+GateProof can also load a directory of JSON reports and select adapters by file name:
+
+```bash
+gateproof evaluate \
+  --policy policies/default.yaml \
+  --reports tests/fixtures \
+  --output .gateproof/evidence \
+  --commit demo-commit
+```
+
+If the directory contains high or critical findings, the security gate is expected to finish with `FAIL`.
 
 ## Example Policy
 
@@ -63,10 +73,10 @@ GateProof writes the following artifacts to the output directory:
 - `findings-normalized.json`: normalized findings consumed by the policy engine.
 - `policy-snapshot.yaml`: copy of the policy used for the decision.
 - `evidence-manifest.json`: manifest describing the generated bundle.
+- `compliance-report.html`: HTML report with the decision, violations, and artifact list.
 
 ## Tests
 
 ```bash
 pytest
 ```
-

@@ -3,7 +3,6 @@ from pathlib import Path
 from gateproof.models import Finding, GateStatus, ScanReport, ScanType, Severity
 from gateproof.policy_engine import evaluate_policy, load_policy
 
-
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 

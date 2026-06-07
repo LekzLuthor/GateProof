@@ -115,7 +115,10 @@ def _check_required_scans(
     return violations
 
 
-def _check_thresholds(policy: Policy, reports: list[ScanReport]) -> list[PolicyViolation]:
+def _check_thresholds(
+    policy: Policy,
+    reports: list[ScanReport],
+) -> list[PolicyViolation]:
     findings_by_scan_type: dict[ScanType, list[Finding]] = {}
     for report in reports:
         findings_by_scan_type.setdefault(report.scan_type, []).extend(report.findings)
@@ -201,4 +204,3 @@ def _build_explanation(
         "Security gate failed: "
         f"{blocking_violations_count} blocking policy violation(s) detected."
     )
-
