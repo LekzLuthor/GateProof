@@ -1,0 +1,23 @@
+{
+  "config": {
+    "protocol_version": "v1"
+  }
+}
+{
+  "osv": {
+    "id": "GO-2024-0002",
+    "summary": "demo multi-line vulnerable module"
+  }
+}
+{
+  "finding": {
+    "osv": "GO-2024-0002",
+    "trace": [
+      {
+        "module": "example.com/multiline",
+        "package": "example.com/multiline/pkg",
+        "function": "Run"
+      }
+    ]
+  }
+}

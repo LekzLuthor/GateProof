@@ -59,6 +59,12 @@ jobs:
             -t gateproof-go-demo:${{ github.sha }} \
             gateproof/examples/vulnerable-go-app
 
+      - name: Clean previous GateProof artifacts
+        run: |
+          rm -rf gateproof/.gateproof
+          mkdir -p gateproof/.gateproof/input
+          mkdir -p gateproof/.gateproof/evidence
+
       - name: Run GateProof Python and Go scan
         working-directory: gateproof
         continue-on-error: true
@@ -69,10 +75,23 @@ jobs:
             --image gateproof-go-demo:${{ github.sha }} \
             --commit "${{ github.sha }}"
 
+      - name: List GateProof artifacts
+        if: always()
+        run: |
+          ls -la gateproof/.gateproof || true
+          ls -la gateproof/.gateproof/evidence || true
+
       - name: Show gate decision
-        run: cat gateproof/.gateproof/evidence/gate-decision.json
+        if: always()
+        run: |
+          if [[ -f gateproof/.gateproof/evidence/gate-decision.json ]]; then
+            cat gateproof/.gateproof/evidence/gate-decision.json
+          else
+            echo "gate-decision.json was not generated"
+          fi
 
       - name: Upload GateProof evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: gateproof-go-evidence
