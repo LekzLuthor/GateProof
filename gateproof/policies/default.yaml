@@ -8,6 +8,12 @@ required_scans:
   - SECRETS
   - CONTAINER
 
+required_tools:
+  - bandit
+  - pip-audit
+  - gitleaks
+  - trivy
+
 requirements:
   sbom_required: true
   evidence_bundle_required: true
@@ -27,5 +33,5 @@ thresholds:
 
 decision:
   fail_on_missing_required_scan: true
+  fail_on_missing_required_tool: true
   fail_on_policy_violation: true
-

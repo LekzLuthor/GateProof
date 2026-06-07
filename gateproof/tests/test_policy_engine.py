@@ -58,6 +58,36 @@ def test_policy_fails_on_missing_required_scan() -> None:
     )
 
 
+def test_policy_required_tools_pass_when_tools_were_executed() -> None:
+    policy = load_policy(FIXTURES_DIR / "default_policy.yaml").model_copy(
+        update={"required_tools": ["mock"]}
+    )
+    reports = [_empty_report(scan_type) for scan_type in policy.required_scans]
+
+    decision = evaluate_policy(policy, reports)
+
+    assert decision.status == GateStatus.PASS
+    assert decision.executed_tools == ["mock"]
+    assert decision.violations == []
+
+
+def test_policy_fails_on_missing_required_tool() -> None:
+    policy = load_policy(FIXTURES_DIR / "default_policy.yaml").model_copy(
+        update={
+            "required_tools": ["bandit"],
+            "fail_on_missing_required_tool": True,
+        }
+    )
+    reports = [_empty_report(scan_type) for scan_type in policy.required_scans]
+
+    decision = evaluate_policy(policy, reports)
+
+    assert decision.status == GateStatus.FAIL
+    assert any(
+        violation.id == "missing_required_tool:bandit"
+        for violation in decision.violations
+    )
+
+
 def _empty_report(scan_type: ScanType) -> ScanReport:
     return ScanReport(scan_type=scan_type, source_tool="mock", findings=[])
-

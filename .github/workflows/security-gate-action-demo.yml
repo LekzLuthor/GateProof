@@ -48,7 +48,7 @@ jobs:
         with:
           policy: gateproof/policies/${{ github.event.inputs.policy }}.yaml
           source: gateproof/${{ env.APP_DIR }}
-          language: python
+          languages: python
           image: gateproof-action-demo:${{ github.sha }}
           output: gateproof/.gateproof/evidence-action
           gitleaks_config: gateproof/.gitleaks.toml

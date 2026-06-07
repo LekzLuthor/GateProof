@@ -1,0 +1,25 @@
+version: 1
+
+project:
+  name: vulnerable-python-app
+
+scan:
+  source: examples/vulnerable-python-app
+  languages:
+    - python
+
+  python:
+    source: examples/vulnerable-python-app
+    requirements:
+      - examples/vulnerable-python-app/requirements.txt
+
+  common:
+    gitleaks_config: .gitleaks.toml
+
+  container:
+    enabled: true
+
+evidence:
+  reports: .gateproof/input
+  output: .gateproof/evidence
+

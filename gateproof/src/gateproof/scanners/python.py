@@ -29,50 +29,70 @@ def run_bandit(source: Path, reports_dir: Path) -> Path:
     return report_path
 
 
-def run_pip_audit(source: Path, reports_dir: Path) -> Path:
-    ensure_tool_available("pip-audit")
+def run_pip_audit(
+    source: Path,
+    reports_dir: Path,
+    requirements_files: list[Path] | None = None,
+) -> list[Path]:
     reports_dir.mkdir(parents=True, exist_ok=True)
-    report_path = reports_dir / "pip-audit-report.json"
-    requirements_file = _find_requirements_file(source)
-
-    if requirements_file is None:
-        ensure_json_file(report_path, '{"dependencies":[]}')
-        return report_path
-
-    run_command(
-        [
-            "pip-audit",
-            "-r",
-            str(requirements_file),
-            "-f",
-            "json",
-            "-o",
-            str(report_path),
-        ],
-        allow_failure=True,
+    discovered_files = (
+        requirements_files
+        if requirements_files is not None
+        else _find_requirements_files(source)
     )
-    ensure_json_file(report_path, '{"dependencies":[]}')
 
-    return report_path
+    if not discovered_files:
+        report_path = reports_dir / "pip-audit-report.json"
+        ensure_json_file(report_path, '{"dependencies":[]}')
+        return [report_path]
+
+    ensure_tool_available("pip-audit")
+    report_paths: list[Path] = []
+    for index, requirements_file in enumerate(discovered_files, start=1):
+        report_path = _pip_audit_report_path(
+            reports_dir,
+            use_index=len(discovered_files) > 1,
+            index=index,
+        )
+        run_command(
+            [
+                "pip-audit",
+                "-r",
+                str(requirements_file),
+                "-f",
+                "json",
+                "-o",
+                str(report_path),
+            ],
+            allow_failure=True,
+        )
+        ensure_json_file(report_path, '{"dependencies":[]}')
+        report_paths.append(report_path)
+
+    return report_paths
 
 
-def run_python_scanners(source: Path, reports_dir: Path) -> list[Path]:
-    return [
-        run_bandit(source, reports_dir),
-        run_pip_audit(source, reports_dir),
-    ]
+def run_python_scanners(
+    source: Path,
+    reports_dir: Path,
+    requirements_files: list[Path] | None = None,
+) -> list[Path]:
+    report_paths = [run_bandit(source, reports_dir)]
+    report_paths.extend(run_pip_audit(source, reports_dir, requirements_files))
+    return report_paths
 
 
-def _find_requirements_file(source: Path) -> Path | None:
+def _find_requirements_files(source: Path) -> list[Path]:
     candidates = [
         source / "requirements.txt",
         source / "requirements" / "prod.txt",
         source / "requirements" / "base.txt",
     ]
 
-    for candidate in candidates:
-        if candidate.exists():
-            return candidate
+    return [candidate for candidate in candidates if candidate.exists()]
 
-    return None
 
+def _pip_audit_report_path(reports_dir: Path, *, use_index: bool, index: int) -> Path:
+    if not use_index:
+        return reports_dir / "pip-audit-report.json"
+    return reports_dir / f"pip-audit-report-{index}.json"

@@ -9,10 +9,18 @@ inputs:
     description: "Project source directory to scan"
     required: false
     default: "."
-  language:
-    description: "Project language: python, go, cpp, or auto"
+  config:
+    description: "Optional GateProof config YAML"
+    required: false
+    default: ""
+  languages:
+    description: "Comma-separated languages: auto, python, go, cpp"
     required: false
     default: "auto"
+  language:
+    description: "Deprecated. Use languages instead."
+    required: false
+    default: ""
   image:
     description: "Container image to scan with Trivy"
     required: false
@@ -76,7 +84,9 @@ runs:
       shell: bash
       env:
         GATEPROOF_POLICY: ${{ inputs.policy }}
+        GATEPROOF_CONFIG: ${{ inputs.config }}
         GATEPROOF_SOURCE: ${{ inputs.source }}
+        GATEPROOF_LANGUAGES: ${{ inputs.languages }}
         GATEPROOF_LANGUAGE: ${{ inputs.language }}
         GATEPROOF_IMAGE: ${{ inputs.image }}
         GATEPROOF_REPORTS: ${{ inputs.reports }}
@@ -96,11 +106,20 @@ runs:
         ARGS=(
           --policy "$GATEPROOF_POLICY"
           --source "$GATEPROOF_SOURCE"
-          --language "$GATEPROOF_LANGUAGE"
           --reports "$GATEPROOF_REPORTS"
           --output "$GATEPROOF_OUTPUT"
           --commit "$COMMIT"
         )
+
+        if [[ -n "$GATEPROOF_CONFIG" ]]; then
+          ARGS+=(--config "$GATEPROOF_CONFIG")
+        fi
+
+        if [[ -n "$GATEPROOF_LANGUAGES" ]]; then
+          ARGS+=(--languages "$GATEPROOF_LANGUAGES")
+        elif [[ -n "$GATEPROOF_LANGUAGE" ]]; then
+          ARGS+=(--language "$GATEPROOF_LANGUAGE")
+        fi
 
         if [[ -n "$GATEPROOF_IMAGE" ]]; then
           ARGS+=(--image "$GATEPROOF_IMAGE")

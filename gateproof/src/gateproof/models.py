@@ -1,6 +1,6 @@
 from enum import StrEnum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Severity(StrEnum):
@@ -60,10 +60,12 @@ class Policy(BaseModel):
     project_name: str
     profile: str
     required_scans: list[ScanType]
+    required_tools: list[str] = Field(default_factory=list)
     thresholds: dict[ScanType, PolicyThreshold]
     sbom_required: bool = False
     evidence_bundle_required: bool = True
     fail_on_missing_required_scan: bool = True
+    fail_on_missing_required_tool: bool = True
     fail_on_policy_violation: bool = True
 
 
@@ -83,6 +85,7 @@ class GateDecision(BaseModel):
     status: GateStatus
     policy_profile: str
     executed_scans: list[ScanType]
+    executed_tools: list[str]
     findings_total: int
     findings_by_severity: dict[str, int]
     violations: list[PolicyViolation]

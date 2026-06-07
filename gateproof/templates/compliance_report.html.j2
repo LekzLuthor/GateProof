@@ -114,6 +114,13 @@
         </tbody>
       </table>
 
+      <h2>Executed Tools</h2>
+      <ul>
+        {% for tool in decision.executed_tools %}
+          <li>{{ tool }}</li>
+        {% endfor %}
+      </ul>
+
       <h2>Policy Violations</h2>
       <table>
         <thead>

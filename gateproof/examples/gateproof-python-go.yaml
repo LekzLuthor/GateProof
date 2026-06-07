@@ -1,0 +1,31 @@
+version: 1
+
+project:
+  name: platform-monorepo-demo
+
+scan:
+  source: .
+  languages:
+    - python
+    - go
+
+  python:
+    source: examples/vulnerable-python-app
+    requirements:
+      - examples/vulnerable-python-app/requirements.txt
+
+  go:
+    source: examples/vulnerable-go-app
+    packages:
+      - ./...
+
+  common:
+    gitleaks_config: .gitleaks.toml
+
+  container:
+    enabled: true
+
+evidence:
+  reports: .gateproof/input
+  output: .gateproof/evidence
+

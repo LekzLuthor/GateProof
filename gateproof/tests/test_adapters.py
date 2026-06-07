@@ -52,3 +52,21 @@ def test_loader_loads_recognized_reports_from_fixtures_dir() -> None:
     source_tools = {report.source_tool for report in reports}
 
     assert {"bandit", "pip-audit", "gitleaks", "trivy"}.issubset(source_tools)
+
+
+def test_loader_loads_multiple_pip_audit_reports(tmp_path: Path) -> None:
+    first_report = tmp_path / "pip-audit-report-1.json"
+    second_report = tmp_path / "pip-audit-report-2.json"
+    first_report.write_text(
+        (FIXTURES_DIR / "pip-audit-report.json").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    second_report.write_text(
+        (FIXTURES_DIR / "pip-audit-report.json").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    reports = load_reports_from_dir(tmp_path)
+
+    assert len(reports) == 2
+    assert all(report.source_tool == "pip-audit" for report in reports)

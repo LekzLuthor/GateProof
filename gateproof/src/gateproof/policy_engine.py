@@ -35,11 +35,15 @@ def load_policy(path: Path) -> Policy:
             _parse_scan_type(scan_type)
             for scan_type in payload.get("required_scans", [])
         ],
+        required_tools=list(payload.get("required_tools") or []),
         thresholds=thresholds,
         sbom_required=requirements.get("sbom_required", False),
         evidence_bundle_required=requirements.get("evidence_bundle_required", True),
         fail_on_missing_required_scan=decision.get(
             "fail_on_missing_required_scan", True
+        ),
+        fail_on_missing_required_tool=decision.get(
+            "fail_on_missing_required_tool", True
         ),
         fail_on_policy_violation=decision.get("fail_on_policy_violation", True),
     )
@@ -53,9 +57,11 @@ def evaluate_policy(
     findings = [finding for report in reports for finding in report.findings]
     findings_by_severity = _count_findings_by_severity(findings)
     executed_scans = list(dict.fromkeys(report.scan_type for report in reports))
+    executed_tools = list(dict.fromkeys(report.source_tool for report in reports))
 
     violations: list[PolicyViolation] = []
     violations.extend(_check_required_scans(policy, executed_scans))
+    violations.extend(_check_required_tools(policy, reports))
     violations.extend(_check_thresholds(policy, reports))
 
     blocking_violations = [violation for violation in violations if violation.blocking]
@@ -73,6 +79,7 @@ def evaluate_policy(
         status=status,
         policy_profile=policy.profile,
         executed_scans=executed_scans,
+        executed_tools=executed_tools,
         findings_total=len(findings),
         findings_by_severity=findings_by_severity,
         violations=violations,
@@ -109,6 +116,31 @@ def _check_required_scans(
                     actual_count=0,
                     allowed_count=0,
                     blocking=policy.fail_on_missing_required_scan,
+                )
+            )
+
+    return violations
+
+
+def _check_required_tools(
+    policy: Policy,
+    reports: list[ScanReport],
+) -> list[PolicyViolation]:
+    executed_tools = {report.source_tool.lower() for report in reports}
+    violations: list[PolicyViolation] = []
+
+    for required_tool in policy.required_tools:
+        normalized_tool = required_tool.lower()
+        if normalized_tool not in executed_tools:
+            violations.append(
+                PolicyViolation(
+                    id=f"missing_required_tool:{required_tool}",
+                    message=f"Required tool {required_tool} was not executed.",
+                    scan_type=None,
+                    severity=None,
+                    actual_count=None,
+                    allowed_count=None,
+                    blocking=policy.fail_on_missing_required_tool,
                 )
             )
 

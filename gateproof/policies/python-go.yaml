@@ -1,6 +1,6 @@
 project:
-  name: clean-python-app
-  profile: demo-pass-baseline-tolerant
+  name: platform-monorepo
+  profile: secure-release-python-go
 
 required_scans:
   - SAST
@@ -11,6 +11,8 @@ required_scans:
 required_tools:
   - bandit
   - pip-audit
+  - gosec
+  - govulncheck
   - gitleaks
   - trivy
 
@@ -28,10 +30,8 @@ thresholds:
   SECRETS:
     high: 0
   CONTAINER:
-    # Demo baseline tolerance for a reproducible PASS scenario.
-    # This is not a production security policy.
-    critical: 999
-    high: 999
+    critical: 0
+    high: 0
 
 decision:
   fail_on_missing_required_scan: true

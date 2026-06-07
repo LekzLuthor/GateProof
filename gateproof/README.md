@@ -45,7 +45,7 @@ pip install "git+https://github.com/LekzLuthor/GateProof.git#subdirectory=gatepr
 gateproof scan \
   --policy policies/security-gate.yaml \
   --source . \
-  --language python \
+  --languages python \
   --image my-fastapi-app:${GITHUB_SHA} \
   --output .gateproof/evidence \
   --commit "${GITHUB_SHA}"
@@ -66,11 +66,87 @@ Minimal GitHub Actions usage:
     gateproof scan \
       --policy policies/security-gate.yaml \
       --source . \
-      --language python \
+      --languages python \
       --image my-app:${{ github.sha }} \
       --output .gateproof/evidence \
       --commit "${{ github.sha }}"
 ```
+
+## GateProof Configuration File
+
+GateProof uses two YAML file types:
+
+- Policy YAML defines PASS/FAIL rules.
+- `gateproof.yaml` defines what to scan and where to write reports and evidence.
+
+CLI options override values from `gateproof.yaml`.
+
+```bash
+gateproof scan \
+  --config gateproof.yaml \
+  --policy policies/default.yaml \
+  --commit "$GITHUB_SHA"
+```
+
+Minimal config shape:
+
+```yaml
+version: 1
+
+project:
+  name: example-service
+
+scan:
+  source: .
+  languages:
+    - python
+
+  python:
+    source: .
+    requirements:
+      - requirements.txt
+
+  common:
+    gitleaks_config: .gitleaks.toml
+
+  container:
+    enabled: true
+    image: example:${GITHUB_SHA}
+
+evidence:
+  reports: .gateproof/input
+  output: .gateproof/evidence
+```
+
+You can also pass languages directly:
+
+```bash
+gateproof scan \
+  --policy policies/default.yaml \
+  --source . \
+  --languages python,go \
+  --output .gateproof/evidence
+```
+
+The Go and C/C++ profiles are detected and validated, but their scanners are not implemented yet. Selecting `go` or `cpp` currently returns a clear “profile is not implemented yet” error.
+
+Policies can require both scan categories and concrete tools:
+
+```yaml
+required_scans:
+  - SAST
+  - SCA
+  - SECRETS
+  - CONTAINER
+
+required_tools:
+  - bandit
+  - pip-audit
+  - gitleaks
+  - trivy
+```
+
+`required_scans` checks security categories such as `SAST`, `SCA`, `SECRETS`, and `CONTAINER`. `required_tools` checks concrete tools such as `bandit`, `pip-audit`, `gitleaks`, `trivy`, `gosec`, and `govulncheck`.
 
 ## GitHub Action Usage
 
@@ -91,7 +167,7 @@ Install the package yourself, install the external scanners, and call `gateproof
     gateproof scan \
       --policy policies/security-gate.yaml \
       --source . \
-      --language python \
+      --languages python \
       --image my-app:${{ github.sha }} \
       --output .gateproof/evidence \
       --commit "${{ github.sha }}"
@@ -107,7 +183,7 @@ Use the GateProof composite action as a single `uses` step:
   with:
     policy: policies/security-gate.yaml
     source: .
-    language: python
+    languages: python
     image: my-app:${{ github.sha }}
     output: .gateproof/evidence
 ```
